@@ -13,13 +13,19 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 def help_function():
+    """
+     Выведет пользователю то, как правильно запустить скрипт
+    """
     print(f"\nДля вывода текущей конфигурации:\n>> python3 main.py list\n")
     print(f"Для создания одного архива нужно передать ключ:\n>> python3 main.py <key_from_List>\n")
     print(f"Для создания всех архивов указанных в конфигурации выполнять без аргументов:\n>> python3 main.py\n")
 
 
 def list_function(list_of_directories: dict):
-    print("В конфигурации доступны следующие директории с папками:")
+    """
+    Выведет пользователю текущую конфигурацию и то какие диретории бэкапятся
+    """
+    print("В текущей конфигурации следующие директории с папками:")
     for key, value in list_of_directories.items():
         print(f"{key}: {value}")
 
@@ -38,8 +44,14 @@ def create_zip_archive(backup_path, archive_name, files):
     with ZipFile(archive_path, "w") as archive:
         for file in files:
             relative_path = file.relative_to(dir_path)      # получаем относительный путь от dir_path
-            archive.write(file, arcname=str(relative_path)) # записываем файл в архив с относительным путем 
+            archive.write(file, arcname=str(relative_path)) # записываем файл в архив с относительным путем
 
+
+def cleanup_function():
+    """
+    Функция очистки старых файлов, количество архивов которые должны оставаться задается в конфигурации
+    """
+    pass  # TODO: нужно очищать тачку от хлама
 
 if __name__ == "__main__":
     backups_path = Path(backups_path_string)  # отформатируем путь до папки с бэкапами под класс pathlib.PosixPath
@@ -63,7 +75,7 @@ if __name__ == "__main__":
                     files = get_files(Path(dir_path))
                     create_zip_archive(backups_path, archive_name, files)
                 except Exception as e:
-                    logging.error(f"Ошибка при создании архива {archive_name}")
+                    logging.error(f"Ошибка при создании архива {archive_name}: ошибка {e}")
 
                 logging.info(f"Архив успешно создан {archive_name} по пути {backups_path}")
     else:
@@ -76,7 +88,7 @@ if __name__ == "__main__":
                 files = get_files(Path(dir_path))
                 create_zip_archive(backups_path, archive_name, files)
             except Exception as e:
-                logging.error(f"Ошибка при создании архива {archive_name}")
+                logging.error(f"Ошибка при создании архива {archive_name}: ошибка {e}")
                 continue
 
             logging.info(f"Архив успешно создан {archive_name} по пути {backups_path}")
