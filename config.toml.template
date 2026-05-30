@@ -1,0 +1,8 @@
+title = "Config file for backups"
+
+[backup_folder]
+path = "/home/user/Documents/backups"
+
+[target_folders]
+path1 = "/home/user/Documents/folder1"
+path2 = "/home/user/Documents/folder2"

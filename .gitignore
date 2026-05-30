@@ -1,3 +1,5 @@
-values.py
 __pycache__/*
 .idea/*
+
+test/*
+config.toml

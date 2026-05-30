@@ -1,16 +1,30 @@
-from values import list_of_directories
-from values import backups_path_string
-
 from zipfile import ZipFile
 from pathlib import Path
 from datetime import date
-from sys import argv
+from sys import argv, exit
+import tomllib
 import logging
 
 
-# настройка логирования
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+def get_backup_path():
+    """
+    Получаем путь до директории с бэкапами из конфига
+    Функция вернет путь в формате pathlib.PosixPath
+    """
+    with open("config.toml", "rb") as f:
+        config = tomllib.load(f)
 
+    return Path(config["backup_folder"]["path"])
+
+def get_target_folders_paths():
+    """
+    Функция вернет словарь путей которые будем архивировать
+    Эта функция вернет значения в словаре типа string
+    """
+    with open("config.toml", "rb") as f:
+        config = tomllib.load(f)
+
+    return config["target_folders"]
 
 def help_function():
     """
@@ -21,6 +35,24 @@ def help_function():
     print(f"Для создания всех архивов указанных в конфигурации выполнять без аргументов:\n>> python3 main.py\n")
 
 
+def check_directories_exists(list_of_directories):
+    """
+    Функция проверит существования директорий по списку переданному в
+    нее и прекратит выполнение программы если какие то пути не валины
+    или переданный список содержит не только директории.
+    """
+    logging.info("Сперва проверим валидность того, что переданно в скрипт")
+    for key, dir_path in list_of_directories.items():
+        directory = Path(dir_path)
+
+        if directory.is_dir() and directory.exists():
+            logging.info(f"Путь до {key} валидный - продолжаем")
+        else:
+            logging.error(f"Путь до {key} не валиден - рекомендуется перепроверка конфига")
+            logging.critical("Завершение работы программы")
+            exit(1)
+
+
 def list_function(list_of_directories: dict):
     """
     Выведет пользователю текущую конфигурацию и то какие диретории бэкапятся
@@ -28,6 +60,7 @@ def list_function(list_of_directories: dict):
     print("В текущей конфигурации следующие директории с папками:")
     for key, value in list_of_directories.items():
         print(f"{key}: {value}")
+
 
 def get_files(path):
     """
@@ -54,8 +87,14 @@ def cleanup_function():
     pass  # TODO: нужно очищать тачку от хлама
 
 if __name__ == "__main__":
-    backups_path = Path(backups_path_string)  # отформатируем путь до папки с бэкапами под класс pathlib.PosixPath
-    backups_path.mkdir(exist_ok=True)         # создаем директорию для бэкапов если ее не существует
+    # настройка логирования
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+    backups_path = get_backup_path()   # получим путь до директории с бэкапами
+    backups_path.mkdir(exist_ok=True)  # создаем директорию для бэкапов если ее не существует
+
+    list_of_directories = get_target_folders_paths()  # получаем список директорий из конфига
+    check_directories_exists(list_of_directories)     # и проверим действительно ли они есть
 
     if len(argv) == 2:
         match argv[1]:
